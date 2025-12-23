@@ -1,16 +1,16 @@
-// Stats calculator - transforms raw data into statistics
-
-import type { SessionData, MessageData, OpenCodeStats, ModelStats, ProviderStats } from "./types";
-import { collectSessions, collectMessages, collectAllSessions, collectProjects } from "./collector";
+import type { OpenCodeStats, ModelStats, ProviderStats, WeekdayActivity } from "./types";
+import { collectMessages, collectProjects, collectSessions } from "./collector";
+import { fetchModelsData, getModelDisplayName, getModelProvider, getProviderDisplayName } from "./models";
 
 export async function calculateStats(year: number): Promise<OpenCodeStats> {
-  // Collect data for the specified year
-  const sessions = await collectSessions(year);
-  const messages = await collectMessages(year);
-  const projects = await collectProjects();
+  const [, allSessions, messages, projects] = await Promise.all([
+    fetchModelsData(),
+    collectSessions(),
+    collectMessages(year),
+    collectProjects(),
+  ]);
 
-  // Get all sessions ever to find first session date
-  const allSessions = await collectAllSessions();
+  const sessions = allSessions.filter((s) => new Date(s.time.created).getFullYear() === year);
 
   // Find first session date (ever, not just this year)
   // Guard against empty sessions array - Math.min() returns Infinity with no arguments
@@ -26,87 +26,75 @@ export async function calculateStats(year: number): Promise<OpenCodeStats> {
     daysSinceFirstSession = Math.floor((Date.now() - firstSessionTimestamp) / (1000 * 60 * 60 * 24));
   }
 
-  // Count sessions, messages, and projects
   const totalSessions = sessions.length;
   const totalMessages = messages.length;
   const totalProjects = projects.length;
 
-  // Calculate tokens
   let totalInputTokens = 0;
   let totalOutputTokens = 0;
+  let totalCost = 0;
+  let hasZenUsage = false;
+  const modelCounts = new Map<string, number>();
+  const providerCounts = new Map<string, number>();
+  const dailyActivity = new Map<string, number>();
+  const weekdayCounts: [number, number, number, number, number, number, number] = [0, 0, 0, 0, 0, 0, 0];
 
   for (const message of messages) {
     if (message.tokens) {
       totalInputTokens += message.tokens.input || 0;
       totalOutputTokens += message.tokens.output || 0;
     }
-  }
 
-  const totalTokens = totalOutputTokens;
-
-  // Calculate cost (only from opencode/zen provider)
-  let totalCost = 0;
-  let hasZenUsage = false;
-
-  for (const message of messages) {
     if (message.providerID === "opencode" && message.cost) {
       totalCost += message.cost;
       hasZenUsage = true;
     }
-  }
 
-  // Calculate model stats
-  const modelCounts = new Map<string, number>();
-  for (const message of messages) {
-    if (message.modelID && message.role === "assistant") {
-      const count = modelCounts.get(message.modelID) || 0;
-      modelCounts.set(message.modelID, count + 1);
+    if (message.role === "assistant") {
+      if (message.modelID) {
+        modelCounts.set(message.modelID, (modelCounts.get(message.modelID) || 0) + 1);
+      }
+      if (message.providerID) {
+        providerCounts.set(message.providerID, (providerCounts.get(message.providerID) || 0) + 1);
+      }
     }
-  }
 
-  const totalModelUsage = Array.from(modelCounts.values()).reduce((a, b) => a + b, 0);
-  const topModels: ModelStats[] = Array.from(modelCounts.entries())
-    .sort((a, b) => b[1] - a[1])
-    .map(([name, count]) => ({
-      name: formatModelName(name),
-      count,
-      percentage: Math.round((count / totalModelUsage) * 100),
-    }))
-    .slice(0, 3);
-
-  // Calculate provider stats
-  const providerCounts = new Map<string, number>();
-  for (const message of messages) {
-    if (message.providerID && message.role === "assistant") {
-      const count = providerCounts.get(message.providerID) || 0;
-      providerCounts.set(message.providerID, count + 1);
-    }
-  }
-
-  const totalProviderUsage = Array.from(providerCounts.values()).reduce((a, b) => a + b, 0);
-  const topProviders: ProviderStats[] = Array.from(providerCounts.entries())
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 10)
-    .map(([name, count]) => ({
-      name: formatProviderName(name),
-      count,
-      percentage: Math.round((count / totalProviderUsage) * 100),
-    }));
-
-  // Calculate daily activity for heatmap
-  const dailyActivity = new Map<string, number>();
-  for (const message of messages) {
+    // Daily activity
     const date = new Date(message.time.created);
     const dateKey = formatDateKey(date);
-    const count = dailyActivity.get(dateKey) || 0;
-    dailyActivity.set(dateKey, count + 1);
+    dailyActivity.set(dateKey, (dailyActivity.get(dateKey) || 0) + 1);
+
+    // Weekday activity
+    weekdayCounts[date.getDay()]++;
   }
 
-  // Calculate streaks
+  const totalTokens = totalInputTokens + totalOutputTokens;
+
+  const topModels: ModelStats[] = Array.from(modelCounts.entries())
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 3)
+    .map(([id, count]) => ({
+      id,
+      name: getModelDisplayName(id),
+      providerId: getModelProvider(id),
+      count,
+      percentage: 0,
+    }));
+
+  const topProviders: ProviderStats[] = Array.from(providerCounts.entries())
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 3)
+    .map(([id, count]) => ({
+      id,
+      name: getProviderDisplayName(id),
+      count,
+      percentage: 0,
+    }));
+
   const { maxStreak, currentStreak, maxStreakDays } = calculateStreaks(dailyActivity, year);
 
-  // Find most active day
   const mostActiveDay = findMostActiveDay(dailyActivity);
+  const weekdayActivity = buildWeekdayActivity(weekdayCounts);
 
   return {
     year,
@@ -127,6 +115,7 @@ export async function calculateStats(year: number): Promise<OpenCodeStats> {
     maxStreakDays,
     dailyActivity,
     mostActiveDay,
+    weekdayActivity,
   };
 }
 
@@ -137,47 +126,10 @@ function formatDateKey(date: Date): string {
   return `${year}-${month}-${day}`;
 }
 
-function formatModelName(name: string): string {
-  // Format model names to be more readable
-  const nameMap: Record<string, string> = {
-    "claude-opus-4.5": "Claude Opus 4.5",
-    "claude-sonnet-4.5": "Claude Sonnet 4.5",
-    "claude-sonnet-4": "Claude Sonnet 4",
-    "claude-haiku-4.5": "Claude Haiku 4.5",
-    "claude-haiku-4-5": "Claude Haiku 4.5",
-    "claude-sonnet-4-5": "Claude Sonnet 4.5",
-    "claude-opus-4-5-thinking": "Claude Opus 4.5 Thinking",
-    "claude-opus-4-1": "Claude Opus 4.1",
-    "gpt-5": "GPT-5",
-    "gpt-5-codex": "GPT-5 Codex",
-    "gpt-5.1": "GPT-5.1",
-    "gpt-5.1-codex": "GPT-5.1 Codex",
-    "grok-code": "Grok Code",
-    "grok-code-fast-1": "Grok Code Fast",
-    "kimi-k2": "Kimi K2",
-    "big-pickle": "Big Pickle",
-    "glm-4.6": "GLM 4.6",
-    "code-supernova": "Code Supernova",
-    "gemini-2.5-pro": "Gemini 2.5 Pro",
-    "gemini-3-pro-preview": "Gemini 3 Pro",
-  };
-
-  return nameMap[name] || name;
-}
-
-function formatProviderName(name: string): string {
-  const nameMap: Record<string, string> = {
-    "github-copilot": "GitHub Copilot",
-    opencode: "OpenCode Zen",
-    google: "Google AI",
-    anthropic: "Anthropic",
-    openai: "OpenAI",
-  };
-
-  return nameMap[name] || name;
-}
-
-function calculateStreaks(dailyActivity: Map<string, number>, year: number): { maxStreak: number; currentStreak: number; maxStreakDays: Set<string> } {
+function calculateStreaks(
+  dailyActivity: Map<string, number>,
+  year: number
+): { maxStreak: number; currentStreak: number; maxStreakDays: Set<string> } {
   // Get all active dates sorted
   const activeDates = Array.from(dailyActivity.keys())
     .filter((date) => date.startsWith(String(year)))
@@ -188,7 +140,6 @@ function calculateStreaks(dailyActivity: Map<string, number>, year: number): { m
   }
 
   let maxStreak = 1;
-  let currentStreak = 1;
   let tempStreak = 1;
   let tempStreakStart = 0;
   let maxStreakStart = 0;
@@ -221,43 +172,34 @@ function calculateStreaks(dailyActivity: Map<string, number>, year: number): { m
     maxStreakDays.add(activeDates[i]);
   }
 
-  // Calculate current streak (from today backwards)
+  // Calculate current streak (from today or yesterday backwards)
   const today = formatDateKey(new Date());
   const yesterday = formatDateKey(new Date(Date.now() - 24 * 60 * 60 * 1000));
 
-  if (dailyActivity.has(today)) {
-    currentStreak = 1;
-    let checkDate = new Date();
-
-    while (true) {
-      checkDate = new Date(checkDate.getTime() - 24 * 60 * 60 * 1000);
-      const checkKey = formatDateKey(checkDate);
-
-      if (dailyActivity.has(checkKey)) {
-        currentStreak++;
-      } else {
-        break;
-      }
-    }
-  } else if (dailyActivity.has(yesterday)) {
-    currentStreak = 1;
-    let checkDate = new Date(Date.now() - 24 * 60 * 60 * 1000);
-
-    while (true) {
-      checkDate = new Date(checkDate.getTime() - 24 * 60 * 60 * 1000);
-      const checkKey = formatDateKey(checkDate);
-
-      if (dailyActivity.has(checkKey)) {
-        currentStreak++;
-      } else {
-        break;
-      }
-    }
-  } else {
-    currentStreak = 0;
-  }
+  const currentStreak = dailyActivity.has(today)
+    ? countStreakBackwards(dailyActivity, new Date())
+    : dailyActivity.has(yesterday)
+    ? countStreakBackwards(dailyActivity, new Date(Date.now() - 24 * 60 * 60 * 1000))
+    : 0;
 
   return { maxStreak, currentStreak, maxStreakDays };
+}
+
+/** Count consecutive days with activity going backwards from startDate (inclusive) */
+function countStreakBackwards(dailyActivity: Map<string, number>, startDate: Date): number {
+  let streak = 1;
+  let checkDate = new Date(startDate);
+
+  while (true) {
+    checkDate = new Date(checkDate.getTime() - 24 * 60 * 60 * 1000);
+    if (dailyActivity.has(formatDateKey(checkDate))) {
+      streak++;
+    } else {
+      break;
+    }
+  }
+
+  return streak;
 }
 
 function findMostActiveDay(dailyActivity: Map<string, number>): { date: string; count: number; formattedDate: string } | null {
@@ -289,5 +231,25 @@ function findMostActiveDay(dailyActivity: Map<string, number>): { date: string; 
     date: maxDate,
     count: maxCount,
     formattedDate,
+  };
+}
+
+function buildWeekdayActivity(counts: [number, number, number, number, number, number, number]): WeekdayActivity {
+  const WEEKDAY_NAMES_FULL = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+
+  let mostActiveDay = 0;
+  let maxCount = 0;
+  for (let i = 0; i < 7; i++) {
+    if (counts[i] > maxCount) {
+      maxCount = counts[i];
+      mostActiveDay = i;
+    }
+  }
+
+  return {
+    counts,
+    mostActiveDay,
+    mostActiveDayName: WEEKDAY_NAMES_FULL[mostActiveDay],
+    maxCount,
   };
 }

@@ -19,7 +19,6 @@ export function detectTerminal(): TerminalInfo {
   if (env.TERM === "xterm-ghostty") {
     type = "ghostty";
     supportsKittyProtocol = true;
-    console.log("Detected Ghostty terminal.");
   }
   // Kitty
   else if (env.TERM === "xterm-kitty" || env.KITTY_WINDOW_ID) {

@@ -1,15 +1,16 @@
 // Font loader for Satori
 
-import { join } from "node:path";
 import type { Font } from "satori";
 
-export async function loadFonts(): Promise<Font[]> {
-  const fontsDir = join(import.meta.dir, "../../assets/fonts");
+import regularFontPath from "../../assets/fonts/IBMPlexMono-Regular.ttf";
+import mediumFontPath from "../../assets/fonts/IBMPlexMono-Medium.ttf";
+import boldFontPath from "../../assets/fonts/IBMPlexMono-Bold.ttf";
 
+export async function loadFonts(): Promise<Font[]> {
   const [regularFont, mediumFont, boldFont] = await Promise.all([
-    Bun.file(join(fontsDir, "IBMPlexMono-Regular.ttf")).arrayBuffer(),
-    Bun.file(join(fontsDir, "IBMPlexMono-Medium.ttf")).arrayBuffer(),
-    Bun.file(join(fontsDir, "IBMPlexMono-Bold.ttf")).arrayBuffer(),
+    Bun.file(regularFontPath).arrayBuffer(),
+    Bun.file(mediumFontPath).arrayBuffer(),
+    Bun.file(boldFontPath).arrayBuffer(),
   ]);
 
   return [

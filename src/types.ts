@@ -56,12 +56,15 @@ export interface ProjectData {
 }
 
 export interface ModelStats {
+  id: string;
   name: string;
+  providerId: string;
   count: number;
   percentage: number;
 }
 
 export interface ProviderStats {
+  id: string;
   name: string;
   count: number;
   percentage: number;
@@ -108,6 +111,16 @@ export interface OpenCodeStats {
     count: number;
     formattedDate: string;
   } | null;
+
+  // Weekday activity distribution (0=Sunday, 6=Saturday)
+  weekdayActivity: WeekdayActivity;
+}
+
+export interface WeekdayActivity {
+  counts: [number, number, number, number, number, number, number];
+  mostActiveDay: number;
+  mostActiveDayName: string;
+  maxCount: number;
 }
 
 export interface CliArgs {
