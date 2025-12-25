@@ -1,12 +1,12 @@
 name: Release
 
 on:
-  workflow_dispatch:
-  # push:
-  #   branches:
-  #     - main
-  #     - beta
-  #     - alpha
+  # workflow_dispatch:
+  push:
+    branches:
+      - main
+      - beta
+      - alpha
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
