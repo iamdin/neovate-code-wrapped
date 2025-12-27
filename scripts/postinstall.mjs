@@ -14,12 +14,13 @@
 import fs from "fs";
 import path from "path";
 import os from "os";
-import { execSync } from "child_process";
+import { execSync, spawnSync } from "child_process";
 import { fileURLToPath } from "url";
 import { createRequire } from "module";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const require = createRequire(import.meta.url);
+const VERSION_CHECK_TIMEOUT_MS = 5000;
 
 /**
  * Detect if the system uses musl libc (Alpine Linux, etc.)
@@ -77,10 +78,7 @@ function detectAVX2() {
   return true;
 }
 
-/**
- * Get the platform-specific package name
- */
-function getPackageName() {
+function getPlatformInfo() {
   let platform;
   switch (os.platform()) {
     case "darwin":
@@ -108,20 +106,85 @@ function getPackageName() {
       return null;
   }
 
-  // Build package name parts
-  const parts = ["oc-wrapped", platform, arch];
+  return { platform, arch };
+}
 
-  // Add baseline suffix for x64 without AVX2
-  if (arch === "x64" && !detectAVX2()) {
-    parts.push("baseline");
+function buildPackageName(platform, arch, { baseline, musl }) {
+  return [
+    "oc-wrapped",
+    platform,
+    arch,
+    baseline ? "baseline" : undefined,
+    musl ? "musl" : undefined,
+  ]
+    .filter(Boolean)
+    .join("-");
+}
+
+function getCandidatePackageNames() {
+  const info = getPlatformInfo();
+  if (!info) {
+    return null;
   }
 
-  // Add musl suffix for Linux with musl libc
-  if (platform === "linux" && detectMusl()) {
-    parts.push("musl");
+  const { platform, arch } = info;
+  const isLinux = platform === "linux";
+  const isX64 = arch === "x64";
+  const hasMusl = isLinux && detectMusl();
+  const hasAvx2 = isX64 ? detectAVX2() : true;
+  const candidates = [];
+
+  const addCandidate = (baseline, musl) => {
+    candidates.push(buildPackageName(platform, arch, { baseline, musl }));
+  };
+
+  if (hasMusl) {
+    if (isX64) {
+      if (hasAvx2) {
+        addCandidate(false, true);
+        addCandidate(true, true);
+      } else {
+        addCandidate(true, true);
+      }
+    } else {
+      addCandidate(false, true);
+    }
+    return { candidates, platform, arch, hasMusl, hasAvx2 };
   }
 
-  return parts.join("-");
+  if (isX64) {
+    if (hasAvx2) {
+      addCandidate(false, false);
+      addCandidate(true, false);
+    } else {
+      addCandidate(true, false);
+    }
+  } else {
+    addCandidate(false, false);
+  }
+
+  return { candidates, platform, arch, hasMusl, hasAvx2 };
+}
+
+function testBinary(binaryPath) {
+  const result = spawnSync(binaryPath, ["--version"], {
+    stdio: "pipe",
+    timeout: VERSION_CHECK_TIMEOUT_MS,
+  });
+
+  if (result.error) {
+    return { ok: false, reason: result.error.message };
+  }
+
+  if (result.signal) {
+    return { ok: false, reason: `terminated with ${result.signal}` };
+  }
+
+  if (typeof result.status === "number" && result.status !== 0) {
+    return { ok: false, reason: `exited with ${result.status}` };
+  }
+
+  return { ok: true };
 }
 
 /**
@@ -198,42 +261,47 @@ function linkBinary(sourcePath, binaryName) {
 
 async function main() {
   try {
-    const packageName = getPackageName();
+    const selection = getCandidatePackageNames();
 
-    if (!packageName) {
+    if (!selection) {
       console.error(`oc-wrapped: Unsupported platform: ${os.platform()}-${os.arch()}`);
       console.error("Please download the binary manually from:");
       console.error("https://github.com/moddi3/opencode-wrapped/releases");
       process.exit(0); // Exit gracefully
     }
 
-    console.log(`oc-wrapped: Detected platform package: ${packageName}`);
+    const { candidates, platform, arch, hasMusl, hasAvx2 } = selection;
+    const platformLabel = `${platform}-${arch}${hasMusl ? " (musl)" : ""}`;
+    const featureLabel = arch === "x64" ? (hasAvx2 ? "avx2" : "baseline") : "default";
+    console.log(`oc-wrapped: Selecting binary for ${platformLabel} (${featureLabel})`);
 
-    const result = findBinary(packageName);
-
-    if (!result) {
-      // Try fallback without baseline/musl
-      const baseParts = packageName.split("-").slice(0, 3);
-      const basePackage = baseParts.join("-");
-
-      if (basePackage !== packageName) {
-        console.log(`oc-wrapped: Trying fallback package: ${basePackage}`);
-        const fallbackResult = findBinary(basePackage);
-
-        if (fallbackResult) {
-          linkBinary(fallbackResult.binaryPath, fallbackResult.binaryName);
-          return;
-        }
+    let lastFailure = null;
+    for (const packageName of candidates) {
+      const result = findBinary(packageName);
+      if (!result) {
+        continue;
       }
 
-      console.error(`oc-wrapped: Could not find binary for ${packageName}`);
-      console.error("The optional dependency may have failed to install.");
-      console.error("Please download the binary manually from:");
-      console.error("https://github.com/moddi3/opencode-wrapped/releases");
-      process.exit(0);
+      const check = testBinary(result.binaryPath);
+      if (!check.ok) {
+        lastFailure = `${packageName} ${check.reason}`;
+        console.log(`oc-wrapped: ${packageName} failed (${check.reason}), trying fallback`);
+        continue;
+      }
+
+      linkBinary(result.binaryPath, result.binaryName);
+      console.log(`oc-wrapped: Linked ${packageName}`);
+      return;
     }
 
-    linkBinary(result.binaryPath, result.binaryName);
+    console.error("oc-wrapped: Could not find a working binary for this platform.");
+    if (lastFailure) {
+      console.error(`Last error: ${lastFailure}`);
+    }
+    console.error("The optional dependency may have failed to install.");
+    console.error("Please download the binary manually from:");
+    console.error("https://github.com/moddi3/opencode-wrapped/releases");
+    process.exit(0);
   } catch (error) {
     console.error("oc-wrapped: Postinstall error:", error.message);
     process.exit(0); // Exit gracefully to not break npm install
