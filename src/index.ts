@@ -13,6 +13,7 @@ import { displayInTerminal, getTerminalName } from "./terminal/display";
 import { copyImageToClipboard } from "./clipboard";
 import { isWrappedAvailable } from "./utils/dates";
 import { formatNumber } from "./utils/format";
+import { detectInstalledAgents, displayAgentSuggestions } from "./agents";
 import type { OpenCodeStats } from "./types";
 
 const VERSION = "1.0.0";
@@ -179,6 +180,9 @@ async function main() {
       p.log.info(tweetUrl);
     }
   }
+
+  const detectedAgents = await detectInstalledAgents();
+  displayAgentSuggestions(detectedAgents);
 
   p.outro("Share your wrapped!");
   process.exit(0);
