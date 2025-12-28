@@ -88,8 +88,6 @@ function HeatmapGrid({ weeks, dailyActivity, maxStreakDays, maxCount }: HeatmapG
         display: "flex",
         flexDirection: "row",
         gap: CELL_GAP,
-        flexWrap: "wrap",
-        maxWidth: "100%",
       }}
     >
       {weeks.map((week, weekIndex) => (
