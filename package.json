@@ -13,6 +13,10 @@
     "oc-wrapped"
   ],
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/moddi3/opencode-wrapped.git"
+  },
   "type": "module",
   "bin": {
     "oc-wrapped": "./bin/oc-wrapped"

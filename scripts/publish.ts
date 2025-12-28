@@ -68,7 +68,7 @@ await Bun.file(`./dist/${targetpackageName}/package.json`).write(
       bin: { [targetpackageName]: `./bin/${targetpackageName}` },
       scripts: { postinstall: "node ./postinstall.mjs" },
       optionalDependencies: binaries,
-      // repository: pkg.repository,
+      repository: pkg.repository,
       // homepage: pkg.homepage,
       // bugs: pkg.bugs,
       keywords: pkg.keywords,
