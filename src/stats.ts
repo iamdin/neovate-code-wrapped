@@ -1,6 +1,6 @@
 import type { OpenCodeStats, ModelStats, ProviderStats, WeekdayActivity } from "./types";
 import { collectMessages, collectProjects, collectSessions } from "./collector";
-import { fetchModelsData, getModelDisplayName, getModelProvider, getProviderDisplayName } from "./models";
+import { fetchModelsData, getModelDisplayName, getModelProvider, getProviderDisplayName, getModelPricing, type ModelCost } from "./models";
 
 export async function calculateStats(year: number): Promise<OpenCodeStats> {
   const [, allSessions, messages, projects] = await Promise.all([
@@ -32,8 +32,8 @@ export async function calculateStats(year: number): Promise<OpenCodeStats> {
 
   let totalInputTokens = 0;
   let totalOutputTokens = 0;
-  let totalCost = 0;
-  let hasZenUsage = false;
+  let zenCost = 0;
+  let estimatedCost = 0;
   const modelCounts = new Map<string, number>();
   const providerCounts = new Map<string, number>();
   const dailyActivity = new Map<string, number>();
@@ -46,8 +46,14 @@ export async function calculateStats(year: number): Promise<OpenCodeStats> {
     }
 
     if (message.providerID === "opencode" && message.cost) {
-      totalCost += message.cost;
-      hasZenUsage = true;
+      zenCost += message.cost;
+    }
+
+    if (message.providerID !== "opencode" && message.tokens && message.modelID) {
+      const pricing = getModelPricing(message.modelID);
+      if (pricing) {
+        estimatedCost += calculateMessageCost(message.tokens, pricing);
+      }
     }
 
     if (message.role === "assistant") {
@@ -106,8 +112,8 @@ export async function calculateStats(year: number): Promise<OpenCodeStats> {
     totalInputTokens,
     totalOutputTokens,
     totalTokens,
-    totalCost,
-    hasZenUsage,
+    zenCost,
+    estimatedCost,
     topModels,
     topProviders,
     maxStreak,
@@ -117,6 +123,30 @@ export async function calculateStats(year: number): Promise<OpenCodeStats> {
     mostActiveDay,
     weekdayActivity,
   };
+}
+
+interface TokenCounts {
+  input: number;
+  output: number;
+  reasoning: number;
+  cache: { read: number; write: number };
+}
+
+function calculateMessageCost(tokens: TokenCounts, pricing: ModelCost): number {
+  const MILLION = 1_000_000;
+
+  let cost = 0;
+  cost += (tokens.input * pricing.input) / MILLION;
+  cost += (tokens.output * pricing.output) / MILLION;
+
+  if (pricing.cacheRead && tokens.cache.read) {
+    cost += (tokens.cache.read * pricing.cacheRead) / MILLION;
+  }
+  if (pricing.cacheWrite && tokens.cache.write) {
+    cost += (tokens.cache.write * pricing.cacheWrite) / MILLION;
+  }
+
+  return cost;
 }
 
 function formatDateKey(date: Date): string {

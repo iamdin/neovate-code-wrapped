@@ -87,9 +87,10 @@ export interface OpenCodeStats {
   totalOutputTokens: number;
   totalTokens: number;
 
-  // Cost (only from OpenCode/Zen provider)
-  totalCost: number;
-  hasZenUsage: boolean;
+  // Cost (only from OpenCode Zen provider)
+  zenCost: number;
+  // Cost from all other providers combined
+  estimatedCost: number;
 
   // Models (sorted by usage)
   topModels: ModelStats[];

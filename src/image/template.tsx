@@ -373,7 +373,30 @@ function RankingItemRow({ rank, name, logoUrl }: RankingItemRowProps) {
 }
 
 function StatsGrid({ stats }: { stats: OpenCodeStats }) {
-  const hasZen = stats.hasZenUsage;
+  const totalCombinedCost = stats.zenCost + stats.estimatedCost;
+  const isEstimated = stats.estimatedCost > 0;
+
+  const costLabel = isEstimated ? "Est. Cost" : "Total Cost";
+  let costValue: React.ReactNode;
+
+  if (isEstimated && stats.zenCost > 0) {
+    costValue = (
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: spacing[1] }}>
+        <span>{formatCost(totalCombinedCost)}</span>
+        <span
+          style={{
+            fontSize: typography.size.lg,
+            fontWeight: typography.weight.medium,
+            color: colors.accent.primary,
+          }}
+        >
+          {formatCost(stats.zenCost)} Zen
+        </span>
+      </div>
+    );
+  } else {
+    costValue = formatCost(totalCombinedCost);
+  }
 
   return (
     <div
@@ -384,44 +407,30 @@ function StatsGrid({ stats }: { stats: OpenCodeStats }) {
         gap: spacing[5],
       }}
     >
-      {hasZen ? (
-        <div style={{ display: "flex", flexDirection: "column", gap: spacing[5] }}>
-          <div style={{ display: "flex", gap: spacing[5] }}>
-            <StatBox label="Sessions" value={formatNumber(stats.totalSessions)} />
-            <StatBox label="Messages" value={formatNumber(stats.totalMessages)} />
-            <StatBox label="Total Tokens" value={formatNumber(stats.totalTokens)} />
-          </div>
-
-          <div style={{ display: "flex", gap: spacing[5] }}>
-            <StatBox label="Projects" value={formatNumber(stats.totalProjects)} />
-            <StatBox label="Streak" value={`${stats.maxStreak}d`} />
-            <StatBox label="OpenCode Zen Cost" value={formatCost(stats.totalCost)} />
-          </div>
+      <div style={{ display: "flex", flexDirection: "column", gap: spacing[5] }}>
+        <div style={{ display: "flex", gap: spacing[5] }}>
+          <StatBox label="Sessions" value={formatNumber(stats.totalSessions)} />
+          <StatBox label="Messages" value={formatNumber(stats.totalMessages)} />
+          <StatBox label="Total Tokens" value={formatNumber(stats.totalTokens)} />
         </div>
-      ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: spacing[5] }}>
-          <div style={{ display: "flex", gap: spacing[5] }}>
-            <StatBox label="Sessions" value={formatNumber(stats.totalSessions)} />
-            <StatBox label="Messages" value={formatNumber(stats.totalMessages)} />
-            <StatBox label="Tokens" value={formatNumber(stats.totalTokens)} />
-          </div>
 
-          <div style={{ display: "flex", gap: spacing[5] }}>
-            <StatBox label="Projects" value={formatNumber(stats.totalProjects)} />
-            <StatBox label="Streak" value={`${stats.maxStreak}d`} />
-          </div>
+        <div style={{ display: "flex", gap: spacing[5] }}>
+          <StatBox label="Projects" value={formatNumber(stats.totalProjects)} />
+          <StatBox label="Streak" value={`${stats.maxStreak}d`} />
+          <StatBox label={costLabel} value={costValue} />
         </div>
-      )}
+      </div>
     </div>
   );
 }
 
 interface StatBoxProps {
   label: string;
-  value: string;
+  value: string | React.ReactNode;
+  subtitle?: string;
 }
 
-function StatBox({ label, value }: StatBoxProps) {
+function StatBox({ label, value, subtitle }: StatBoxProps) {
   return (
     <div
       style={{
@@ -451,16 +460,33 @@ function StatBox({ label, value }: StatBoxProps) {
         {label}
       </span>
 
-      <span
-        style={{
-          fontSize: typography.size["2xl"],
-          fontWeight: typography.weight.bold,
-          color: colors.text.primary,
-          lineHeight: typography.lineHeight.none,
-        }}
-      >
-        {value}
-      </span>
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+        <div
+          style={{
+            fontSize: typography.size["2xl"],
+            fontWeight: typography.weight.bold,
+            color: colors.text.primary,
+            lineHeight: typography.lineHeight.none,
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+          }}
+        >
+          {value}
+        </div>
+        {subtitle && (
+          <span
+            style={{
+              fontSize: typography.size.sm,
+              fontWeight: typography.weight.regular,
+              color: colors.text.muted,
+              marginTop: spacing[1],
+            }}
+          >
+            {subtitle}
+          </span>
+        )}
+      </div>
     </div>
   );
 }

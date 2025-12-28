@@ -109,7 +109,8 @@ async function main() {
     `Total Tokens:  ${formatNumber(stats.totalTokens)}`,
     `Projects:      ${formatNumber(stats.totalProjects)}`,
     `Streak:        ${stats.maxStreak} days`,
-    stats.hasZenUsage && `Zen Cost:      ${stats.totalCost.toFixed(2)}$`,
+    stats.zenCost > 0 && `Zen Cost:      $${stats.zenCost.toFixed(2)}`,
+    stats.estimatedCost > 0 && `Est. Cost:     ~$${stats.estimatedCost.toFixed(2)}`,
     stats.mostActiveDay && `Most Active:   ${stats.mostActiveDay.formattedDate}`,
   ];
 
