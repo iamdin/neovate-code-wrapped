@@ -2,8 +2,8 @@
   "name": "neovate-code-wrapped",
   "version": "1.0.0",
   "author": {
-    "name": "moddi3 (Vlad Ivanov)",
-    "email": "oss@moddi3.com"
+    "name": "iamdin",
+    "email": "iamdinq@gmail.com"
   },
   "description": "Generate a personalized Spotify Wrapped-style summary of your Neovate usage",
   "keywords": [
@@ -15,7 +15,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/moddi3/neovate-code-wrapped.git"
+    "url": "git+https://github.com/iamdin/neovate-code-wrapped.git"
   },
   "type": "module",
   "bin": {
