@@ -4,9 +4,7 @@ import * as p from "@clack/prompts";
 import { join } from "node:path";
 import { parseArgs } from "node:util";
 
-import { xdgData } from "xdg-basedir";
-
-import { checkOpenCodeDataExists } from "./collector";
+import { checkNeovateDataExists } from "./collector";
 import { calculateStats } from "./stats";
 import { generateImage } from "./image/generator";
 import { displayInTerminal, getTerminalName } from "./terminal/display";
@@ -14,18 +12,19 @@ import { copyImageToClipboard } from "./clipboard";
 import { isWrappedAvailable } from "./utils/dates";
 import { formatNumber } from "./utils/format";
 import { detectInstalledAgents, displayAgentSuggestions } from "./agents";
-import type { OpenCodeStats } from "./types";
+import type { NeovateStats } from "./types";
 
 const VERSION = "1.0.0";
+const NEOVATE_DATA_PATH = join(process.env.HOME!, ".neovate/projects");
 
 function printHelp() {
   console.log(`
-oc-wrapped v${VERSION}
+neovate-code-wrapped v${VERSION}
 
-Generate your OpenCode year in review stats card.
+Generate your Neovate year in review stats card.
 
 USAGE:
-  oc-wrapped [OPTIONS]
+  neovate-wrapped [OPTIONS]
 
 OPTIONS:
   --year <YYYY>    Generate wrapped for a specific year (default: current year)
@@ -33,13 +32,12 @@ OPTIONS:
   --version, -v    Show version number
 
 EXAMPLES:
-  oc-wrapped              # Generate current year wrapped
-  oc-wrapped --year 2025  # Generate 2025 wrapped
+  neovate-wrapped              # Generate current year wrapped
+  neovate-wrapped --year 2025  # Generate 2025 wrapped
 `);
 }
 
 async function main() {
-  // Parse command line arguments
   const { values } = parseArgs({
     args: process.argv.slice(2),
     options: {
@@ -57,11 +55,11 @@ async function main() {
   }
 
   if (values.version) {
-    console.log(`oc-wrapped v${VERSION}`);
+    console.log(`neovate-code-wrapped v${VERSION}`);
     process.exit(0);
   }
 
-  p.intro("opencode wrapped");
+  p.intro("neovate wrapped");
 
   const requestedYear = values.year ? parseInt(values.year, 10) : new Date().getFullYear();
 
@@ -76,14 +74,14 @@ async function main() {
     process.exit(0);
   }
 
-  const dataExists = await checkOpenCodeDataExists();
+  const dataExists = await checkNeovateDataExists();
   if (!dataExists) {
-    p.cancel(`OpenCode data not found in ${xdgData}/opencode\n\nMake sure you have used OpenCode at least once.`);
+    p.cancel(`Neovate data not found in ${NEOVATE_DATA_PATH}\n\nMake sure you have used Neovate at least once.`);
     process.exit(0);
   }
 
   const spinner = p.spinner();
-  spinner.start("Scanning your OpenCode history...");
+  spinner.start("Scanning your Neovate history...");
 
   let stats;
   try {
@@ -96,27 +94,24 @@ async function main() {
 
   if (stats.totalSessions === 0) {
     spinner.stop("No data found");
-    p.cancel(`No OpenCode activity found for ${requestedYear}`);
+    p.cancel(`No Neovate activity found for ${requestedYear}`);
     process.exit(0);
   }
 
   spinner.stop("Found your stats!");
 
-  // Display summary
   const summaryLines = [
     `Sessions:      ${formatNumber(stats.totalSessions)}`,
     `Messages:      ${formatNumber(stats.totalMessages)}`,
     `Total Tokens:  ${formatNumber(stats.totalTokens)}`,
     `Projects:      ${formatNumber(stats.totalProjects)}`,
     `Streak:        ${stats.maxStreak} days`,
-    stats.zenCost > 0 && `Zen Cost:      $${stats.zenCost.toFixed(2)}`,
     stats.estimatedCost > 0 && `Est. Cost:     ~$${stats.estimatedCost.toFixed(2)}`,
     stats.mostActiveDay && `Most Active:   ${stats.mostActiveDay.formattedDate}`,
   ];
 
-  p.note(summaryLines.join("\n"), `Your ${requestedYear} in OpenCode`);
+  p.note(summaryLines.filter(Boolean).join("\n"), `Your ${requestedYear} in Neovate`);
 
-  // Generate image
   spinner.start("Generating your wrapped image...");
 
   let image: { fullSize: Buffer; displaySize: Buffer };
@@ -135,7 +130,7 @@ async function main() {
     p.log.info(`Terminal (${getTerminalName()}) doesn't support inline images`);
   }
 
-  const filename = `oc-wrapped-${requestedYear}.png`;
+  const filename = `neovate-wrapped-${requestedYear}.png`;
   const { success, error } = await copyImageToClipboard(image.fullSize, filename);
 
   if (success) {
@@ -189,16 +184,16 @@ async function main() {
   process.exit(0);
 }
 
-function generateTweetUrl(stats: OpenCodeStats): string {
+function generateTweetUrl(stats: NeovateStats): string {
   const text = [
-    `my ${stats.year} opencode wrapped:`,
+    `my ${stats.year} neovate wrapped:`,
     ``,
     `${formatNumber(stats.totalSessions)} sessions`,
     `${formatNumber(stats.totalMessages)} messages`,
     `${formatNumber(stats.totalTokens)} tokens`,
     `${stats.maxStreak} day streak`,
     ``,
-    `get yours: npx oc-wrapped`,
+    `get yours: npx neovate-code-wrapped`,
   ].join("\n");
 
   const url = new URL("https://x.com/intent/tweet");

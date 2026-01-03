@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * Postinstall script for oc-wrapped
+ * Postinstall script for neovate-wrapped
  *
  * This script runs after npm install and symlinks the correct platform-specific
  * binary to the bin directory. It auto-detects:
@@ -111,7 +111,7 @@ function getPlatformInfo() {
 
 function buildPackageName(platform, arch, { baseline, musl }) {
   return [
-    "oc-wrapped",
+    "neovate-wrapped",
     platform,
     arch,
     baseline ? "baseline" : undefined,
@@ -191,7 +191,7 @@ function testBinary(binaryPath) {
  * Find the binary from the platform package
  */
 function findBinary(packageName) {
-  const binaryName = os.platform() === "win32" ? "oc-wrapped.exe" : "oc-wrapped";
+  const binaryName = os.platform() === "win32" ? "neovate-wrapped.exe" : "neovate-wrapped";
 
   try {
     const packageJsonPath = require.resolve(`${packageName}/package.json`);
@@ -264,16 +264,16 @@ async function main() {
     const selection = getCandidatePackageNames();
 
     if (!selection) {
-      console.error(`oc-wrapped: Unsupported platform: ${os.platform()}-${os.arch()}`);
+      console.error(`neovate-wrapped: Unsupported platform: ${os.platform()}-${os.arch()}`);
       console.error("Please download the binary manually from:");
-      console.error("https://github.com/moddi3/opencode-wrapped/releases");
+      console.error("https://github.com/moddi3/neovate-code-wrapped/releases");
       process.exit(0); // Exit gracefully
     }
 
     const { candidates, platform, arch, hasMusl, hasAvx2 } = selection;
     const platformLabel = `${platform}-${arch}${hasMusl ? " (musl)" : ""}`;
     const featureLabel = arch === "x64" ? (hasAvx2 ? "avx2" : "baseline") : "default";
-    console.log(`oc-wrapped: Selecting binary for ${platformLabel} (${featureLabel})`);
+    console.log(`neovate-wrapped: Selecting binary for ${platformLabel} (${featureLabel})`);
 
     let lastFailure = null;
     for (const packageName of candidates) {
@@ -285,25 +285,25 @@ async function main() {
       const check = testBinary(result.binaryPath);
       if (!check.ok) {
         lastFailure = `${packageName} ${check.reason}`;
-        console.log(`oc-wrapped: ${packageName} failed (${check.reason}), trying fallback`);
+        console.log(`neovate-wrapped: ${packageName} failed (${check.reason}), trying fallback`);
         continue;
       }
 
       linkBinary(result.binaryPath, result.binaryName);
-      console.log(`oc-wrapped: Linked ${packageName}`);
+      console.log(`neovate-wrapped: Linked ${packageName}`);
       return;
     }
 
-    console.error("oc-wrapped: Could not find a working binary for this platform.");
+    console.error("neovate-wrapped: Could not find a working binary for this platform.");
     if (lastFailure) {
       console.error(`Last error: ${lastFailure}`);
     }
     console.error("The optional dependency may have failed to install.");
     console.error("Please download the binary manually from:");
-    console.error("https://github.com/moddi3/opencode-wrapped/releases");
+    console.error("https://github.com/moddi3/neovate-code-wrapped/releases");
     process.exit(0);
   } catch (error) {
-    console.error("oc-wrapped: Postinstall error:", error.message);
+    console.error("neovate-wrapped: Postinstall error:", error.message);
     process.exit(0); // Exit gracefully to not break npm install
   }
 }

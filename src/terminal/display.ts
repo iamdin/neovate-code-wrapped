@@ -88,7 +88,7 @@ function displayKittyProtocol(pngBuffer: Buffer): void {
  */
 function displayITerm2Protocol(pngBuffer: Buffer): void {
   const base64Data = pngBuffer.toString("base64");
-  const filename = Buffer.from("oc-wrapped.png").toString("base64");
+  const filename = Buffer.from("neovate-wrapped.png").toString("base64");
 
   // OSC 1337 ; File=[args] : base64data ST
   process.stdout.write(`\x1b]1337;File=name=${filename};size=${pngBuffer.length};inline=1:${base64Data}\x07\n`);

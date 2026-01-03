@@ -1,58 +1,33 @@
-// Types for OpenCode Wrapped
+// Types for Neovate Code Wrapped
 
-export interface SessionData {
-  id: string;
-  version: string;
-  projectID: string;
-  directory: string;
-  title: string;
-  time: {
-    created: number;
-    updated: number;
-  };
-  summary?: {
-    additions: number;
-    deletions: number;
-    files: number;
+export interface MessageData {
+  parentUuid: string | null;
+  uuid: string;
+  role: "user" | "assistant";
+  content: string | Array<{ type: string; text: string }>;
+  text?: string;
+  type: "message";
+  timestamp: string;
+  sessionId: string;
+  model?: string;
+  usage?: {
+    input_tokens: number;
+    output_tokens: number;
   };
 }
 
-export interface MessageData {
+export interface SessionData {
   id: string;
-  sessionID: string;
-  role: "user" | "assistant";
-  time: {
-    created: number;
-    completed?: number;
-  };
-  parentID?: string;
-  modelID?: string;
-  providerID?: string;
-  mode?: string;
-  agent?: string;
-  cost?: number;
-  tokens?: {
-    input: number;
-    output: number;
-    reasoning: number;
-    cache: {
-      read: number;
-      write: number;
-    };
-  };
-  finish?: string;
+  projectPath: string;
+  firstMessageTime: number;
+  lastMessageTime: number;
+  messageCount: number;
 }
 
 export interface ProjectData {
   id: string;
-  worktree: string;
-  vcsDir: string;
-  vcs: string;
-  time: {
-    created: number;
-    updated: number;
-    initialized?: number;
-  };
+  path: string;
+  encodedName: string;
 }
 
 export interface ModelStats {
@@ -70,7 +45,7 @@ export interface ProviderStats {
   percentage: number;
 }
 
-export interface OpenCodeStats {
+export interface NeovateStats {
   year: number;
 
   // Time-based
@@ -87,9 +62,7 @@ export interface OpenCodeStats {
   totalOutputTokens: number;
   totalTokens: number;
 
-  // Cost (only from OpenCode Zen provider)
-  zenCost: number;
-  // Cost from all other providers combined
+  // Cost (estimated from usage)
   estimatedCost: number;
 
   // Models (sorted by usage)
@@ -101,10 +74,10 @@ export interface OpenCodeStats {
   // Streak
   maxStreak: number;
   currentStreak: number;
-  maxStreakDays: Set<string>; // Days that form the max streak (for heatmap highlighting)
+  maxStreakDays: Set<string>;
 
   // Activity heatmap (for the year)
-  dailyActivity: Map<string, number>; // "2025-01-15" -> count
+  dailyActivity: Map<string, number>;
 
   // Most active day
   mostActiveDay: {

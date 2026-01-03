@@ -49,7 +49,7 @@ export const buildTargets = async (version: string) => {
 // Allow running directly
 if (import.meta.main) {
   const version = process.argv[2] || pkg.version;
-  console.log(`\n🎁 Building oc-wrapped v${version}\n`);
+  console.log(`\n🎁 Building neovate-wrapped v${version}\n`);
   await buildTargets(version);
   console.log("\n✅ Build complete\n");
 }

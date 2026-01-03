@@ -1,5 +1,5 @@
 /**
- * OpenCode Wrapped Design Tokens
+ * Neovate Wrapped Design Tokens
  *
  * Comprehensive design system for pixel-perfect image generation.
  * All values follow an 8px grid system for consistent visual rhythm.
@@ -31,7 +31,7 @@ export const colors = {
 
   // Accent colors
   accent: {
-    primary: "#6CC644", // OpenCode green
+    primary: "#6CC644", // Neovate green
     primaryHover: "#7DD656", // Green hover
     secondary: "#3B82F6", // Blue accent
     tertiary: "#F59E0B", // Amber for highlights

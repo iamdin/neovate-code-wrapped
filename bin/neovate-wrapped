@@ -39,8 +39,8 @@ let arch = archMap[osArch()];
 if (!arch) {
   arch = osArch();
 }
-const base = "oc-wrapped-" + platform + "-" + arch;
-const binary = platform === "windows" ? "oc-wrapped.exe" : "oc-wrapped";
+const base = "neovate-wrapped-" + platform + "-" + arch;
+const binary = platform === "windows" ? "neovate-wrapped.exe" : "neovate-wrapped";
 
 function findBinary(startDir) {
   let current = startDir;
@@ -69,7 +69,7 @@ function findBinary(startDir) {
 const resolved = findBinary(__dirname);
 if (!resolved) {
   console.error(
-    'It seems that your package manager failed to install the right version of oc-wrapped CLI for your platform. You can try manually installing "' +
+    'It seems that your package manager failed to install the right version of neovate-wrapped CLI for your platform. You can try manually installing "' +
       base +
       '" package'
   );

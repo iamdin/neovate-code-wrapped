@@ -1,11 +1,11 @@
 #!/usr/bin/env bun
 
 import { generateImage } from "../src/image/generator";
-import type { OpenCodeStats } from "../src/types";
+import type { NeovateStats } from "../src/types";
 import { join } from "node:path";
 
 // Generate realistic sample data
-function generateDemoStats(): OpenCodeStats {
+function generateDemoStats(): NeovateStats {
   const year = 2025;
 
   // Generate daily activity data for the whole year
@@ -67,8 +67,7 @@ function generateDemoStats(): OpenCodeStats {
     totalOutputTokens: 12_800_000,
     totalTokens: 58_000_000,
 
-    totalCost: 127.45,
-    hasZenUsage: true,
+    estimatedCost: 127.45,
 
     topModels: [
       { id: "claude-sonnet-4", name: "Claude Sonnet 4", providerId: "anthropic", count: 4521, percentage: 50.6 },

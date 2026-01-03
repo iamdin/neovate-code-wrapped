@@ -92,7 +92,7 @@ export function isWrappedAvailable(year: number): { available: boolean; message?
   if (year > currentYear) {
     return {
       available: false,
-      message: `OpenCode Wrapped ${year} isn't available yet. The future hasn't been written!`,
+      message: `Neovate Wrapped ${year} isn't available yet. The future hasn't been written!`,
     };
   }
 
@@ -102,7 +102,7 @@ export function isWrappedAvailable(year: number): { available: boolean; message?
     return {
       available: false,
       message: [
-        `OpenCode Wrapped ${year} isn't ready yet!`,
+        `Neovate Wrapped ${year} isn't ready yet!`,
         `Come back on December ${decemberLaunchDay}th to unwrap your coding year in review.`,
         `Only ${daysUntil} days to go!`,
       ],

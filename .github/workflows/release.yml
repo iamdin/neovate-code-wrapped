@@ -23,7 +23,7 @@ jobs:
   release:
     name: Release
     runs-on: ubuntu-latest
-    if: github.repository == 'moddi3/opencode-wrapped'
+    if: github.repository == 'moddi3/neovate-code-wrapped'
 
     steps:
       - name: Checkout

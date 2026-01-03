@@ -1,13 +1,10 @@
-import type { OpenCodeStats, WeekdayActivity } from "../types";
+import type { NeovateStats, WeekdayActivity } from "../types";
 import { formatNumber, formatCost, formatShortDate, formatDate } from "../utils/format";
 import { ActivityHeatmap } from "./heatmap";
 import { getProviderLogoUrl } from "../models";
 import { colors, typography, spacing, layout, components } from "./design-tokens";
-import logo from "../../assets/images/opencode-wordmark-simple-dark.svg" with { type: 'text' }
 
-const OPENCODE_LOGO_DATA_URL = `data:image/svg+xml;base64,${Buffer.from(logo).toString("base64")}`;
-
-export function WrappedTemplate({ stats }: { stats: OpenCodeStats }) {
+export function WrappedTemplate({ stats }: { stats: NeovateStats }) {
   return (
     <div
       style={{
@@ -104,13 +101,17 @@ function Header({ year }: { year: number }) {
         gap: spacing[3],
       }}
     >
-      <img
-        src={OPENCODE_LOGO_DATA_URL}
-        height={160}
+      <span
         style={{
-          objectFit: "contain",
+          fontSize: 96,
+          fontWeight: typography.weight.bold,
+          color: colors.text.primary,
+          lineHeight: typography.lineHeight.none,
+          letterSpacing: typography.letterSpacing.tight,
         }}
-      />
+      >
+        Neovate Code
+      </span>
 
       <span
         style={{
@@ -372,31 +373,9 @@ function RankingItemRow({ rank, name, logoUrl }: RankingItemRowProps) {
   );
 }
 
-function StatsGrid({ stats }: { stats: OpenCodeStats }) {
-  const totalCombinedCost = stats.zenCost + stats.estimatedCost;
-  const isEstimated = stats.estimatedCost > 0;
-
-  const costLabel = isEstimated ? "Est. Cost" : "Total Cost";
-  let costValue: React.ReactNode;
-
-  if (isEstimated && stats.zenCost > 0) {
-    costValue = (
-      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: spacing[1] }}>
-        <span>{formatCost(totalCombinedCost)}</span>
-        <span
-          style={{
-            fontSize: typography.size.lg,
-            fontWeight: typography.weight.medium,
-            color: colors.accent.primary,
-          }}
-        >
-          {formatCost(stats.zenCost)} Zen
-        </span>
-      </div>
-    );
-  } else {
-    costValue = formatCost(totalCombinedCost);
-  }
+function StatsGrid({ stats }: { stats: NeovateStats }) {
+  const costLabel = "Est. Cost";
+  const costValue = formatCost(stats.estimatedCost);
 
   return (
     <div
@@ -511,7 +490,7 @@ function Footer() {
           letterSpacing: typography.letterSpacing.normal,
         }}
       >
-        opencode.ai
+        neovate
       </span>
       <span
         style={{
@@ -530,7 +509,7 @@ function Footer() {
           letterSpacing: typography.letterSpacing.normal,
         }}
       >
-        npx oc-wrapped
+        npx neovate-code-wrapped
       </span>
     </div>
   );

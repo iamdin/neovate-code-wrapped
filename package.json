@@ -1,25 +1,25 @@
 {
-  "name": "oc-wrapped",
+  "name": "neovate-code-wrapped",
   "version": "1.0.0",
   "author": {
     "name": "moddi3 (Vlad Ivanov)",
     "email": "oss@moddi3.com"
   },
-  "description": "Generate a personalized Spotify Wrapped-style summary of your OpenCode usage",
+  "description": "Generate a personalized Spotify Wrapped-style summary of your Neovate usage",
   "keywords": [
-    "opencode",
+    "neovate",
     "wrapped",
-    "opencode-wrapped",
-    "oc-wrapped"
+    "neovate-wrapped",
+    "neovate-code-wrapped"
   ],
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/moddi3/opencode-wrapped.git"
+    "url": "git+https://github.com/moddi3/neovate-code-wrapped.git"
   },
   "type": "module",
   "bin": {
-    "oc-wrapped": "./bin/oc-wrapped"
+    "neovate-wrapped": "./bin/neovate-wrapped"
   },
   "scripts": {
     "start": "bun src/index.ts",
@@ -40,7 +40,7 @@
     "@semantic-release/exec": "^7.1.0",
     "@semantic-release/git": "^10.0.1",
     "@types/bun": "latest",
-    "@types/react": "^19.2.7",
+    "@types/react": "^19.2.0",
     "@typescript/native-preview": "^7.0.0-dev.20251223.1",
     "bunup": "^0.16.10",
     "semantic-release": "^25.0.2",

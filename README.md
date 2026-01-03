@@ -1,15 +1,15 @@
 <div align="center">
 
-# oc-wrapped
+# neovate-code-wrapped
 
 **Your year in code, beautifully visualized.**
 
-Generate a personalized "Spotify Wrapped"-style summary of your [OpenCode](https://opencode.ai) usage.
+Generate a personalized "Spotify Wrapped"-style summary of your [Neovate](https://neovate.ai) usage.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Bun](https://img.shields.io/badge/Bun-%23000000.svg?logo=bun&logoColor=white)](https://bun.sh)
 
-<img src="./assets/images/demo-wrapped.png" alt="OpenCode Wrapped Example" width="600" />
+<img src="./assets/images/demo-wrapped.png" alt="Neovate Wrapped Example" width="600" />
 
 </div>
 
@@ -22,19 +22,19 @@ Generate a personalized "Spotify Wrapped"-style summary of your [OpenCode](https
 Run directly without installing:
 
 ```bash
-npx oc-wrapped # or bunx, or yarn/pnpm dlx
+npx neovate-code-wrapped # or bunx, or yarn/pnpm dlx
 ```
 
 ### Global Install
 
 ```bash
-npm install -g oc-wrapped # or bun/yarn/pnpm
+npm install -g neovate-code-wrapped # or bun/yarn/pnpm
 ```
 
 Then run anywhere:
 
 ```bash
-oc-wrapped
+neovate-wrapped
 ```
 
 ## Usage Options
@@ -50,7 +50,7 @@ oc-wrapped
 - Sessions, messages, tokens, projects, and streaks
 - GitHub-style activity heatmap
 - Top models and providers breakdown
-- OpenCode Zen cost tracking
+- Estimated cost tracking
 - Shareable PNG image
 - Inline image display (Ghostty, Kitty, iTerm2, WezTerm, Konsole)
 - Auto-copy to clipboard
@@ -78,10 +78,10 @@ The tool generates:
 
 ## Data Source
 
-OpenCode Wrapped reads data from your local OpenCode installation. It follows the XDG Base Directory Specification:
+Neovate Wrapped reads data from your local Neovate installation:
 
 ```
-$XDG_DATA_HOME/opencode/ (usually ~/.local/share/opencode/)
+~/.neovate/projects/
 ```
 
 No data is sent anywhere. Everything is processed locally.
@@ -125,6 +125,6 @@ MIT License - see [LICENSE](LICENSE) for details.
 
 <div align="center">
 
-Made with ❤️ for the [OpenCode](https://opencode.ai) community
+Made with ❤️ for the [Neovate](https://neovate.ai) community
 
 </div>

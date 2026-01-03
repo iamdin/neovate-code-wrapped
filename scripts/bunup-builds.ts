@@ -9,7 +9,7 @@ type Target = {
   avx2?: false;
 };
 
-export const targetpackageName = "oc-wrapped";
+export const targetpackageName = "neovate-wrapped";
 export const getTargetName = (item: Target) => {
   return [
     targetpackageName,

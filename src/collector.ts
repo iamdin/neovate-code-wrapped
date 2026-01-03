@@ -1,116 +1,159 @@
-// Data collector - reads OpenCode storage and returns raw data
+// Data collector - reads Neovate storage and returns raw data
 
 import { readdir } from "node:fs/promises";
 import { join } from "node:path";
-import { xdgData } from "xdg-basedir";
 import type { SessionData, MessageData, ProjectData } from "./types";
 
-const OPENCODE_DATA_PATH = join(xdgData!, "opencode/storage");
+const NEOVATE_DATA_PATH = join(process.env.HOME!, ".neovate/projects");
 
-export async function checkOpenCodeDataExists(): Promise<boolean> {
+export async function checkNeovateDataExists(): Promise<boolean> {
   try {
-    await readdir(OPENCODE_DATA_PATH);
+    await readdir(NEOVATE_DATA_PATH);
     return true;
   } catch {
     return false;
   }
 }
 
-export async function collectSessions(year?: number): Promise<SessionData[]> {
-  const sessionsPath = join(OPENCODE_DATA_PATH, "session");
-
-  try {
-    const projectDirs = await readdir(sessionsPath);
-
-    const results = await Promise.all(
-      projectDirs.map(async (projectDir) => {
-        const projectPath = join(sessionsPath, projectDir);
-        try {
-          const sessionFiles = await readdir(projectPath);
-          return Promise.all(
-            sessionFiles
-              .filter((f) => f.endsWith(".json"))
-              .map(async (sessionFile) => {
-                try {
-                  const session = (await Bun.file(join(projectPath, sessionFile)).json()) as SessionData;
-                  if (year && new Date(session.time.created).getFullYear() !== year) return null;
-                  return session;
-                } catch {
-                  return null;
-                }
-              })
-          );
-        } catch {
-          return [];
-        }
-      })
-    );
-
-    return results.flat().filter((s): s is SessionData => s !== null);
-  } catch (error) {
-    throw new Error(`Failed to read sessions: ${error}`);
-  }
+function parseJsonl(content: string): any[] {
+  return content
+    .trim()
+    .split("\n")
+    .filter(Boolean)
+    .map((line) => {
+      try {
+        return JSON.parse(line);
+      } catch {
+        return null;
+      }
+    })
+    .filter((item) => item !== null);
 }
 
 export async function collectMessages(year?: number): Promise<MessageData[]> {
-  const messagesPath = join(OPENCODE_DATA_PATH, "message");
-
   try {
-    const sessionDirs = await readdir(messagesPath);
+    const projectDirs = await readdir(NEOVATE_DATA_PATH);
+    const allMessages: MessageData[] = [];
 
-    const results = await Promise.all(
-      sessionDirs.map(async (sessionDir) => {
-        const sessionPath = join(messagesPath, sessionDir);
-        try {
-          const messageFiles = await readdir(sessionPath);
-          return Promise.all(
-            messageFiles
-              .filter((f) => f.endsWith(".json"))
-              .map(async (messageFile) => {
-                try {
-                  const message = (await Bun.file(join(sessionPath, messageFile)).json()) as MessageData;
-                  if (year && new Date(message.time.created).getFullYear() !== year) return null;
-                  return message;
-                } catch {
-                  return null;
-                }
-              })
-          );
-        } catch {
-          return [];
+    for (const projectDir of projectDirs) {
+      const projectPath = join(NEOVATE_DATA_PATH, projectDir);
+
+      try {
+        const files = await readdir(projectPath);
+        const sessionFiles = files.filter((f) => f.endsWith(".jsonl") && !f.includes("/"));
+
+        for (const sessionFile of sessionFiles) {
+          try {
+            const filePath = join(projectPath, sessionFile);
+            const content = await Bun.file(filePath).text();
+            const messages = parseJsonl(content) as MessageData[];
+
+            for (const message of messages) {
+              if (message.type !== "message") continue;
+
+              if (year) {
+                const messageDate = new Date(message.timestamp);
+                if (messageDate.getFullYear() !== year) continue;
+              }
+
+              allMessages.push(message);
+            }
+          } catch {
+            // Skip invalid files
+          }
         }
-      })
-    );
+      } catch {
+        // Skip invalid project directories
+      }
+    }
 
-    return results.flat().filter((m): m is MessageData => m !== null);
+    return allMessages;
   } catch (error) {
     throw new Error(`Failed to read messages: ${error}`);
   }
 }
 
-export async function collectProjects(): Promise<ProjectData[]> {
-  const projectsPath = join(OPENCODE_DATA_PATH, "project");
-
+export async function collectSessions(year?: number): Promise<SessionData[]> {
   try {
-    const projectFiles = await readdir(projectsPath);
-    const jsonFiles = projectFiles.filter((f) => f.endsWith(".json"));
+    const projectDirs = await readdir(NEOVATE_DATA_PATH);
+    const sessions: SessionData[] = [];
 
-    // Read all project files in parallel
-    const results = await Promise.all(
-      jsonFiles.map(async (projectFile) => {
-        try {
-          const filePath = join(projectsPath, projectFile);
-          const content = await Bun.file(filePath).json();
-          return content as ProjectData;
-        } catch {
-          return null; // Skip invalid JSON files
+    for (const projectDir of projectDirs) {
+      const projectPath = join(NEOVATE_DATA_PATH, projectDir);
+
+      try {
+        const files = await readdir(projectPath);
+        const sessionFiles = files.filter((f) => f.endsWith(".jsonl") && !f.includes("/"));
+
+        for (const sessionFile of sessionFiles) {
+          try {
+            const filePath = join(projectPath, sessionFile);
+            const content = await Bun.file(filePath).text();
+            const messages = parseJsonl(content) as MessageData[];
+
+            if (messages.length === 0) continue;
+
+            const validMessages = messages.filter((m) => m.type === "message");
+            if (validMessages.length === 0) continue;
+
+            const timestamps = validMessages.map((m) => new Date(m.timestamp).getTime());
+            const firstTime = Math.min(...timestamps);
+            const lastTime = Math.max(...timestamps);
+
+            if (year) {
+              const firstDate = new Date(firstTime);
+              if (firstDate.getFullYear() !== year) continue;
+            }
+
+            const sessionId = sessionFile.replace(".jsonl", "");
+
+            sessions.push({
+              id: sessionId,
+              projectPath: projectDir,
+              firstMessageTime: firstTime,
+              lastMessageTime: lastTime,
+              messageCount: validMessages.length,
+            });
+          } catch {
+            // Skip invalid files
+          }
         }
-      })
-    );
+      } catch {
+        // Skip invalid project directories
+      }
+    }
 
-    return results.filter((p): p is ProjectData => p !== null);
+    return sessions;
+  } catch (error) {
+    throw new Error(`Failed to read sessions: ${error}`);
+  }
+}
+
+export async function collectProjects(): Promise<ProjectData[]> {
+  try {
+    const projectDirs = await readdir(NEOVATE_DATA_PATH);
+    const projects: ProjectData[] = [];
+
+    for (const projectDir of projectDirs) {
+      const projectPath = join(NEOVATE_DATA_PATH, projectDir);
+
+      try {
+        const stat = await Bun.file(projectPath).exists();
+        // Check if it's a directory by trying to read it
+        await readdir(projectPath);
+
+        projects.push({
+          id: projectDir,
+          path: projectPath,
+          encodedName: projectDir,
+        });
+      } catch {
+        // Not a directory, skip
+      }
+    }
+
+    return projects;
   } catch {
-    // Projects directory might not exist
     return [];
   }
 }
