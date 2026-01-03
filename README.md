@@ -4,7 +4,7 @@
 
 **Your year in code, beautifully visualized.**
 
-Generate a personalized "Spotify Wrapped"-style summary of your [Neovate](https://neovate.ai) usage.
+Generate a personalized "Spotify Wrapped"-style summary of your [Neovate](https://neovateai.dev/en) usage.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Bun](https://img.shields.io/badge/Bun-%23000000.svg?logo=bun&logoColor=white)](https://bun.sh)
@@ -125,6 +125,6 @@ MIT License - see [LICENSE](LICENSE) for details.
 
 <div align="center">
 
-Made with ❤️ for the [Neovate](https://neovate.ai) community
+Made with ❤️ for the [Neovate](https://neovateai.dev/en) community
 
 </div>
