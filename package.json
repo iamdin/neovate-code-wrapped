@@ -19,7 +19,7 @@
   },
   "type": "module",
   "bin": {
-    "neovate-wrapped": "./bin/neovate-wrapped"
+    "neovate-code-wrapped": "./bin/neovate-code-wrapped"
   },
   "scripts": {
     "start": "bun src/index.ts",
