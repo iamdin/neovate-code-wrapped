@@ -15,7 +15,7 @@
         "@semantic-release/exec": "^7.1.0",
         "@semantic-release/git": "^10.0.1",
         "@types/bun": "latest",
-        "@types/react": "^19.2.7",
+        "@types/react": "^19.2.0",
         "@typescript/native-preview": "^7.0.0-dev.20251223.1",
         "bunup": "^0.16.10",
         "semantic-release": "^25.0.2",

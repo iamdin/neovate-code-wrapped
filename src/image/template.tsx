@@ -3,6 +3,9 @@ import { formatNumber, formatCost, formatShortDate, formatDate } from "../utils/
 import { ActivityHeatmap } from "./heatmap";
 import { getProviderLogoUrl } from "../models";
 import { colors, typography, spacing, layout, components } from "./design-tokens";
+import logo from "../../assets/images/neovate-wordmark-simple-dark.svg" with { type: 'text' }
+
+const NEOVATE_LOGO_DATA_URL = `data:image/svg+xml;base64,${Buffer.from(logo).toString("base64")}`;
 
 export function WrappedTemplate({ stats }: { stats: NeovateStats }) {
   return (
@@ -101,17 +104,13 @@ function Header({ year }: { year: number }) {
         gap: spacing[3],
       }}
     >
-      <span
+      <img
+        src={NEOVATE_LOGO_DATA_URL}
+        height={48}
         style={{
-          fontSize: 96,
-          fontWeight: typography.weight.bold,
-          color: colors.text.primary,
-          lineHeight: typography.lineHeight.none,
-          letterSpacing: typography.letterSpacing.tight,
+          objectFit: "contain",
         }}
-      >
-        Neovate Code
-      </span>
+      />
 
       <span
         style={{
