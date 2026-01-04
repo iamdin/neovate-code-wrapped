@@ -31,8 +31,8 @@ export const colors = {
 
   // Accent colors
   accent: {
-    primary: "#6CC644", // Neovate green
-    primaryHover: "#7DD656", // Green hover
+    primary: "#FF3070", // Neovate pink
+    primaryHover: "#FF5C8D", // Pink hover
     secondary: "#3B82F6", // Blue accent
     tertiary: "#F59E0B", // Amber for highlights
   },
@@ -57,16 +57,16 @@ export const colors = {
     level7: "#F0F0F0", // Very high
   },
 
-  // Streak colors - green progression (7 levels: 0-6)
+  // Streak colors - pink progression (7 levels: 0-6)
   streak: {
-    empty: "#0D1A0D", // No activity (dark green tint)
-    level1: "#142814", // Very low
-    level2: "#1A3D1A", // Low
-    level3: "#2D5C2D", // Medium-low
-    level4: "#409940", // Medium
-    level5: "#4DA64D", // Medium-high
-    level6: "#56B356", // High
-    level7: "#6CC644", // Max (accent green)
+    empty: "#1A0D14", // No activity (dark pink tint)
+    level1: "#281420", // Very low
+    level2: "#3D1A28", // Low
+    level3: "#5C2D40", // Medium-low
+    level4: "#994060", // Medium
+    level5: "#A64D72", // Medium-high
+    level6: "#B35680", // High
+    level7: "#FF3070", // Max (accent pink)
   },
 } as const;
 

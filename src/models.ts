@@ -1,15 +1,7 @@
-export interface ModelCost {
-  input: number;
-  output: number;
-  cacheRead?: number;
-  cacheWrite?: number;
-}
-
 interface ModelInfo {
   id: string;
   name: string;
   provider: string;
-  cost?: ModelCost;
 }
 
 interface ProviderInfo {
@@ -75,31 +67,11 @@ export async function fetchModelsData(): Promise<ModelsDevData> {
         if (pd.models && typeof pd.models === "object") {
           for (const [modelId, modelData] of Object.entries(pd.models)) {
             if (modelData && typeof modelData === "object" && modelData.name) {
-              const model: ModelInfo = {
+              models[modelId] = {
                 id: modelId,
                 name: modelData.name,
                 provider: providerId,
               };
-
-              // Extract pricing data if available
-              if (modelData.cost && typeof modelData.cost === "object") {
-                const costData = modelData.cost as {
-                  input?: number;
-                  output?: number;
-                  cache_read?: number;
-                  cache_write?: number;
-                };
-                if (typeof costData.input === "number" && typeof costData.output === "number") {
-                  model.cost = {
-                    input: costData.input,
-                    output: costData.output,
-                    cacheRead: costData.cache_read,
-                    cacheWrite: costData.cache_write,
-                  };
-                }
-              }
-
-              models[modelId] = model;
             }
           }
         }
@@ -151,13 +123,6 @@ export function getProviderDisplayName(providerId: string): string {
 
 export function getProviderLogoUrl(providerId: string): string {
   return `https://models.dev/logos/${providerId}.svg`;
-}
-
-export function getModelPricing(modelId: string): ModelCost | undefined {
-  if (!cachedData) {
-    return undefined;
-  }
-  return cachedData.models[modelId]?.cost;
 }
 
 function formatModelIdAsName(modelId: string): string {

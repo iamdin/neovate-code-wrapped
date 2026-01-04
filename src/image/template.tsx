@@ -100,8 +100,10 @@ function Header({ year }: { year: number }) {
     <div
       style={{
         display: "flex",
-        flexDirection: "column",
-        gap: spacing[3],
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "space-between",
+        width: "100%",
       }}
     >
       <img
@@ -117,7 +119,6 @@ function Header({ year }: { year: number }) {
           fontSize: typography.size["3xl"],
           fontWeight: typography.weight.regular,
           color: colors.text.secondary,
-          marginTop: spacing[2],
         }}
       >
         wrapped
@@ -373,9 +374,6 @@ function RankingItemRow({ rank, name, logoUrl }: RankingItemRowProps) {
 }
 
 function StatsGrid({ stats }: { stats: NeovateStats }) {
-  const costLabel = "Est. Cost";
-  const costValue = formatCost(stats.estimatedCost);
-
   return (
     <div
       style={{
@@ -389,13 +387,13 @@ function StatsGrid({ stats }: { stats: NeovateStats }) {
         <div style={{ display: "flex", gap: spacing[5] }}>
           <StatBox label="Sessions" value={formatNumber(stats.totalSessions)} />
           <StatBox label="Messages" value={formatNumber(stats.totalMessages)} />
-          <StatBox label="Total Tokens" value={formatNumber(stats.totalTokens)} />
+          <StatBox label="Tool Calls" value={formatNumber(stats.totalToolCalls)} />
         </div>
 
         <div style={{ display: "flex", gap: spacing[5] }}>
           <StatBox label="Projects" value={formatNumber(stats.totalProjects)} />
           <StatBox label="Streak" value={`${stats.maxStreak}d`} />
-          <StatBox label={costLabel} value={costValue} />
+          <StatBox label="Total Tokens" value={formatNumber(stats.totalTokens)} />
         </div>
       </div>
     </div>

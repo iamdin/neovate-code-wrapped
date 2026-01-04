@@ -103,10 +103,10 @@ async function main() {
   const summaryLines = [
     `Sessions:      ${formatNumber(stats.totalSessions)}`,
     `Messages:      ${formatNumber(stats.totalMessages)}`,
+    `Tool Calls:    ${formatNumber(stats.totalToolCalls)}`,
     `Total Tokens:  ${formatNumber(stats.totalTokens)}`,
     `Projects:      ${formatNumber(stats.totalProjects)}`,
     `Streak:        ${stats.maxStreak} days`,
-    stats.estimatedCost > 0 && `Est. Cost:     ~$${stats.estimatedCost.toFixed(2)}`,
     stats.mostActiveDay && `Most Active:   ${stats.mostActiveDay.formattedDate}`,
   ];
 

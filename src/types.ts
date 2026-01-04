@@ -4,7 +4,7 @@ export interface MessageData {
   parentUuid: string | null;
   uuid: string;
   role: "user" | "assistant";
-  content: string | Array<{ type: string; text: string }>;
+  content: string | Array<{ type: string; text: string; [key: string]: any }>;
   text?: string;
   type: "message";
   timestamp: string;
@@ -14,6 +14,7 @@ export interface MessageData {
     input_tokens: number;
     output_tokens: number;
   };
+  tool_calls?: Array<{ name: string; [key: string]: any }>;
 }
 
 export interface SessionData {
@@ -45,6 +46,12 @@ export interface ProviderStats {
   percentage: number;
 }
 
+export interface ToolStats {
+  name: string;
+  count: number;
+  percentage: number;
+}
+
 export interface NeovateStats {
   year: number;
 
@@ -56,20 +63,21 @@ export interface NeovateStats {
   totalSessions: number;
   totalMessages: number;
   totalProjects: number;
+  totalToolCalls: number;
 
   // Tokens
   totalInputTokens: number;
   totalOutputTokens: number;
   totalTokens: number;
 
-  // Cost (estimated from usage)
-  estimatedCost: number;
-
   // Models (sorted by usage)
   topModels: ModelStats[];
 
   // Providers (sorted by usage)
   topProviders: ProviderStats[];
+
+  // Tools (sorted by usage)
+  topTools: ToolStats[];
 
   // Streak
   maxStreak: number;

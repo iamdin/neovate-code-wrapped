@@ -1,6 +1,6 @@
 import type { NeovateStats, ModelStats, ProviderStats, WeekdayActivity } from "./types";
 import { collectMessages, collectProjects, collectSessions } from "./collector";
-import { fetchModelsData, getModelDisplayName, getProviderDisplayName, getModelPricing, type ModelCost } from "./models";
+import { fetchModelsData, getModelDisplayName, getProviderDisplayName, getModelProvider } from "./models";
 
 export async function calculateStats(year: number): Promise<NeovateStats> {
   const [, allSessions, messages, projects] = await Promise.all([
@@ -30,11 +30,14 @@ export async function calculateStats(year: number): Promise<NeovateStats> {
 
   let totalInputTokens = 0;
   let totalOutputTokens = 0;
-  let estimatedCost = 0;
   const modelCounts = new Map<string, number>();
   const providerCounts = new Map<string, number>();
   const dailyActivity = new Map<string, number>();
   const weekdayCounts: [number, number, number, number, number, number, number] = [0, 0, 0, 0, 0, 0, 0];
+
+  // Tool call tracking
+  let totalToolCalls = 0;
+  const toolCounts = new Map<string, number>();
 
   for (const message of messages) {
     if (message.usage) {
@@ -55,11 +58,23 @@ export async function calculateStats(year: number): Promise<NeovateStats> {
       }
     }
 
-    // Estimate cost from usage
-    if (message.usage && modelID !== "unknown") {
-      const pricing = getModelPricing(modelID);
-      if (pricing) {
-        estimatedCost += calculateMessageCost(message.usage, pricing);
+    // Count tool calls
+    if (message.tool_calls && Array.isArray(message.tool_calls)) {
+      for (const toolCall of message.tool_calls) {
+        if (toolCall.name) {
+          toolCounts.set(toolCall.name, (toolCounts.get(toolCall.name) || 0) + 1);
+          totalToolCalls++;
+        }
+      }
+    }
+
+    // Also check content array for tool_use blocks
+    if (Array.isArray(message.content)) {
+      for (const contentBlock of message.content) {
+        if (contentBlock.type === "tool_use" && contentBlock.name) {
+          toolCounts.set(contentBlock.name, (toolCounts.get(contentBlock.name) || 0) + 1);
+          totalToolCalls++;
+        }
       }
     }
 
@@ -104,6 +119,15 @@ export async function calculateStats(year: number): Promise<NeovateStats> {
       percentage: 0,
     }));
 
+  const topTools = Array.from(toolCounts.entries())
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 5)
+    .map(([name, count]) => ({
+      name,
+      count,
+      percentage: 0,
+    }));
+
   const { maxStreak, currentStreak, maxStreakDays } = calculateStreaks(dailyActivity, year);
 
   const mostActiveDay = findMostActiveDay(dailyActivity);
@@ -116,12 +140,13 @@ export async function calculateStats(year: number): Promise<NeovateStats> {
     totalSessions,
     totalMessages,
     totalProjects,
+    totalToolCalls,
     totalInputTokens,
     totalOutputTokens,
     totalTokens,
-    estimatedCost,
     topModels,
     topProviders,
+    topTools,
     maxStreak,
     currentStreak,
     maxStreakDays,
