@@ -111,7 +111,7 @@ function getPlatformInfo() {
 
 function buildPackageName(platform, arch, { baseline, musl }) {
   return [
-    "neovate-wrapped",
+    "neovate-code-wrapped",
     platform,
     arch,
     baseline ? "baseline" : undefined,
@@ -191,7 +191,7 @@ function testBinary(binaryPath) {
  * Find the binary from the platform package
  */
 function findBinary(packageName) {
-  const binaryName = os.platform() === "win32" ? "neovate-wrapped.exe" : "neovate-wrapped";
+  const binaryName = os.platform() === "win32" ? "neovate-code-wrapped.exe" : "neovate-code-wrapped";
 
   try {
     const packageJsonPath = require.resolve(`${packageName}/package.json`);

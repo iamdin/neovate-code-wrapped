@@ -39,8 +39,8 @@ let arch = archMap[osArch()];
 if (!arch) {
   arch = osArch();
 }
-const base = "neovate-wrapped-" + platform + "-" + arch;
-const binary = platform === "windows" ? "neovate-wrapped.exe" : "neovate-wrapped";
+const base = "neovate-code-wrapped-" + platform + "-" + arch;
+const binary = platform === "windows" ? "neovate-code-wrapped.exe" : "neovate-code-wrapped";
 
 function findBinary(startDir) {
   let current = startDir;

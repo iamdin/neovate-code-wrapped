@@ -9,7 +9,7 @@ type Target = {
   avx2?: false;
 };
 
-export const targetpackageName = "neovate-wrapped";
+export const targetpackageName = "neovate-code-wrapped";
 export const getTargetName = (item: Target) => {
   return [
     targetpackageName,
@@ -52,7 +52,7 @@ for (const item of targets) {
       target: name.replace(targetpackageName, "bun") as any,
       autoloadBunfig: false,
       autoloadDotenv: false,
-      outfile: `bin/${targetpackageName}`,
+      outfile: `bin/neovate-code-wrapped`,
     },
     outDir: `dist/${name}`,
     format: "esm",
