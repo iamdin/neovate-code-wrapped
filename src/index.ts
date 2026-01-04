@@ -193,7 +193,7 @@ function generateTweetUrl(stats: NeovateStats): string {
     `${formatNumber(stats.totalTokens)} tokens`,
     `${stats.maxStreak} day streak`,
     ``,
-    `get yours: npx neovate-code-wrapped`,
+    `get yours: neovateai.dev`,
   ].join("\n");
 
   const url = new URL("https://x.com/intent/tweet");

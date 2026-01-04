@@ -476,7 +476,6 @@ function Footer() {
         flexDirection: "row",
         justifyContent: "center",
         alignItems: "center",
-        gap: spacing[6],
       }}
     >
       <span
@@ -487,26 +486,7 @@ function Footer() {
           letterSpacing: typography.letterSpacing.normal,
         }}
       >
-        neovate
-      </span>
-      <span
-        style={{
-          fontSize: typography.size.lg,
-          fontWeight: typography.weight.medium,
-          color: colors.text.disabled,
-        }}
-      >
-        |
-      </span>
-      <span
-        style={{
-          fontSize: typography.size.lg,
-          fontWeight: typography.weight.medium,
-          color: colors.text.muted,
-          letterSpacing: typography.letterSpacing.normal,
-        }}
-      >
-        npx neovate-code-wrapped
+        neovateai.dev
       </span>
     </div>
   );

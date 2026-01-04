@@ -1,3 +1,7 @@
+import defaultProviderLogo from "../assets/images/default-provider.svg" with { type: 'text' };
+
+const DEFAULT_PROVIDER_LOGO_DATA_URL = `data:image/svg+xml;base64,${Buffer.from(defaultProviderLogo).toString("base64")}`;
+
 interface ModelInfo {
   id: string;
   name: string;
@@ -122,7 +126,7 @@ export function getProviderDisplayName(providerId: string): string {
 }
 
 export function getProviderLogoUrl(providerId: string): string {
-  return `https://models.dev/logos/${providerId}.svg`;
+  return DEFAULT_PROVIDER_LOGO_DATA_URL;
 }
 
 function formatModelIdAsName(modelId: string): string {
