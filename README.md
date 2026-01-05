@@ -22,7 +22,7 @@ Generate a personalized "Spotify Wrapped"-style summary of your [Neovate](https:
 Run directly without installing:
 
 ```bash
-npx neovate-code-wrapped --year 2025 # or bunx, or yarn/pnpm dlx
+npx neovate-code-wrapped@latest --year 2025 # or bunx, or yarn/pnpm dlx
 ```
 
 ### Global Install
