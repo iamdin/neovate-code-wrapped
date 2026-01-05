@@ -156,25 +156,6 @@ export async function calculateStats(year: number): Promise<NeovateStats> {
   };
 }
 
-function getModelProvider(modelId: string): string {
-  return "unknown";
-}
-
-interface TokenCounts {
-  input_tokens: number;
-  output_tokens: number;
-}
-
-function calculateMessageCost(usage: TokenCounts, pricing: ModelCost): number {
-  const MILLION = 1_000_000;
-
-  let cost = 0;
-  cost += (usage.input_tokens * pricing.input) / MILLION;
-  cost += (usage.output_tokens * pricing.output) / MILLION;
-
-  return cost;
-}
-
 function formatDateKey(date: Date): string {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, "0");
